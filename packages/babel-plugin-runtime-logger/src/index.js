@@ -19,7 +19,7 @@ module.exports = function logger({ types: t}) {
                         )
                 },
                 exit(path) {
-                    const blockStatement = path.node.body;
+                    const blockStatement = path.get('body');
                     const lastExpression = blockStatement.get('body').pop();
                     const timeEndStatement = t.callExpression(
                         t.memberExpression(
