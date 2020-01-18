@@ -1,0 +1,2 @@
+@AutoAssign
+class Miner {}
