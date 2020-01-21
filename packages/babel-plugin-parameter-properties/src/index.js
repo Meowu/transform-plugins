@@ -25,6 +25,7 @@ module.exports = function parameterProperty({ types: t }) {
                     path.node.decorators = decorators.filter(d => d !== assign);
                 });
 
+                // 类定义体，包含 methods 以及 properties, static methods 等。
                 const body = path.get('body.body');
                 // or path.isClassMethod({'kind': 'constructor'});
                 let constructor = body.find(path => path.equals('kind', 'constructor'));
