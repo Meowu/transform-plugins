@@ -1,0 +1,2 @@
+@AutoBind
+class Binder {}
