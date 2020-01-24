@@ -1,4 +1,4 @@
-const utils = require('../../../src/utils');
+const { createThisMemberExpression } = require('../../../src/utils');
 
 module.exports = function autoBind({ types: t }) {
     return {
@@ -26,6 +26,7 @@ module.exports = function autoBind({ types: t }) {
                 }
                 let constructor = body.find(cls => t.isClassMethod(cls) && cls.node.kind === 'constructor');
                 if (!constructor) {
+                    // why methods created by user do not have get, pushContainer method?
                     constructor = t.classMethod(
                         'constructor' /* kind */, 
                         t.identifier('constructor')/**key */, 
@@ -34,16 +35,19 @@ module.exports = function autoBind({ types: t }) {
                     );
                     console.log('ctor', constructor);
                     // append created constructor.
-                    path.get('body').pushContainer('body', constructor);
+                    path.get('body').unshiftContainer('body', constructor);
                 }
                 const ctorBody = constructor.body; // why we cannot constructor.get('body');
                 classMethods.forEach(cls => {
-                    const id = t.identifier(cls.get('key.name')); // method id.
-                    const name = cls.get('key.name'); // TODO: handle computed key.
-                    const left = utils.createThisMemberExpression(t, name);
+                    console.log('cls key', cls.node.key.name);
+                    // console.log('cls name', cls.get('key').name);
+                    const id = t.identifier(cls.node.key.name); // method id.
+                    console.log('id', id);
+                    const name = cls.node.key.name; // TODO: handle computed key.
+                    const left = createThisMemberExpression(t, name);
                     const right = t.callExpression(
                         t.memberExpression(
-                            t.createThisMemberExpression(t, name),
+                            createThisMemberExpression(t, name),
                             t.identifier('bind')
                         )/**callee */,
                         [
@@ -53,13 +57,13 @@ module.exports = function autoBind({ types: t }) {
                     const statement = t.expressionStatement(
                         t.assignmentExpression('='/**operator */, left, right)
                     )
-                    const lastExpression = ctorBody.get('body').pop();
+                    const lastExpression = ctorBody.body.pop();
                     // TestThis.
                     // lastExpression maybe undefined.
-                    if (t.isReturnStatement(lastExpression.node)) {
+                    if (lastExpression && t.isReturnStatement(lastExpression.node)) {
                         lastExpression.insertBefore(statement);
                     } else {
-                        ctorBody.pushContainer('body', statement);
+                        ctorBody.body.push(statement);
                     }
                 })
                 
