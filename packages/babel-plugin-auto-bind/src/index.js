@@ -57,6 +57,7 @@ module.exports = function autoBind({ types: t }) {
                     const statement = t.expressionStatement(
                         t.assignmentExpression('='/**operator */, left, right)
                     )
+                    console.log('body', ctorBody.body)
                     const lastExpression = ctorBody.body.pop();
                     // TestThis.
                     // lastExpression maybe undefined.
