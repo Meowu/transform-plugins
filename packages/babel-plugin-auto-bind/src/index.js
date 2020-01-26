@@ -25,6 +25,7 @@ module.exports = function autoBind({ types: t }) {
                     return;
                 }
                 let constructor = body.find(cls => t.isClassMethod(cls) && cls.node.kind === 'constructor');
+                let ctorBody;
                 if (!constructor) {
                     // why methods created by user do not have get, pushContainer method?
                     constructor = t.classMethod(
@@ -36,8 +37,11 @@ module.exports = function autoBind({ types: t }) {
                     console.log('ctor', constructor);
                     // append created constructor.
                     path.get('body').unshiftContainer('body', constructor);
+                    ctorBody = constructor.body;
+                } else {
+                    ctorBody = constructor.get('body');
                 }
-                const ctorBody = constructor.body; // why we cannot constructor.get('body');
+                // const ctorBody = constructor.body; // why we cannot constructor.get('body');
                 classMethods.forEach(cls => {
                     console.log('cls key', cls.node.key.name);
                     // console.log('cls name', cls.get('key').name);
@@ -58,13 +62,13 @@ module.exports = function autoBind({ types: t }) {
                         t.assignmentExpression('='/**operator */, left, right)
                     )
                     console.log('body', ctorBody.body)
-                    const lastExpression = ctorBody.body.pop();
+                    const lastExpression = ctorBody.body && ctorBody.body.pop() || null;
                     // TestThis.
                     // lastExpression maybe undefined.
                     if (lastExpression && t.isReturnStatement(lastExpression.node)) {
                         lastExpression.insertBefore(statement);
                     } else {
-                        ctorBody.body.push(statement);
+                        ctorBody.body ? ctorBody.body.push(statement) : ctorBody.get('body').push(statement);
                     }
                 })
                 
