@@ -37,16 +37,17 @@ module.exports = function autoBind({ types: t }) {
                     console.log('ctor', constructor);
                     // append created constructor.
                     path.get('body').unshiftContainer('body', constructor);
-                    ctorBody = constructor.body;
+                    ctorBody = constructor.body.body;
                 } else {
-                    ctorBody = constructor.get('body');
+                    ctorBody = constructor.get('body.body');
+                    // console.log('existed ctor', constructor);
+                    // ctorBody = constructor.get('body');
                 }
-                // const ctorBody = constructor.body; // why we cannot constructor.get('body');
+                // console.log('ctor body', constructor.body);
+                // const ctorBody = constructor.body.body; // why we cannot constructor.get('body');
                 classMethods.forEach(cls => {
-                    console.log('cls key', cls.node.key.name);
                     // console.log('cls name', cls.get('key').name);
                     const id = t.identifier(cls.node.key.name); // method id.
-                    console.log('id', id);
                     const name = cls.node.key.name; // TODO: handle computed key.
                     const left = createThisMemberExpression(t, name);
                     const right = t.callExpression(
@@ -61,14 +62,16 @@ module.exports = function autoBind({ types: t }) {
                     const statement = t.expressionStatement(
                         t.assignmentExpression('='/**operator */, left, right)
                     )
-                    console.log('body', ctorBody.body)
-                    const lastExpression = ctorBody.body && ctorBody.body.pop() || null;
+                    console.log('body', ctorBody)
+                    const lastExpression = ctorBody.pop();
                     // TestThis.
                     // lastExpression maybe undefined.
                     if (lastExpression && t.isReturnStatement(lastExpression.node)) {
                         lastExpression.insertBefore(statement);
                     } else {
-                        ctorBody.body ? ctorBody.body.push(statement) : ctorBody.get('body').push(statement);
+                        ctorBody.push(statement);
+                        console.log('append statement', ctorBody.length);
+                        // ctorBody.body ? ctorBody.body.push(statement) : ctorBody.get('body').push(statement);
                     }
                 })
                 
