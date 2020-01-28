@@ -9,6 +9,7 @@ module.exports = function autoBind({ types: t }) {
                 if (!decorators.length) {
                     return;
                 }
+                console.log('key', path.key)
                 // TODO: how to avoid duplicated bind.
                 const nodes = decorators.filter(decorator => {
                     // identifier is not a node.
@@ -36,8 +37,9 @@ module.exports = function autoBind({ types: t }) {
                     );
                     console.log('ctor', constructor);
                     // append created constructor.
-                    path.get('body').unshiftContainer('body', constructor);
-                    ctorBody = constructor.body.body;
+                    [constructor] = path.get('body').unshiftContainer('body', constructor);
+                    // magic!经过 unshiftContainer 之后的构造函数已经被处理过，是一个全新的 path 所以它包含了 get 方法。
+                    // ctorBody = constructor.body.body;
                 } else {
                     // ctorBody = constructor.get('body.body');
                     // console.log('existed ctor', constructor);
@@ -69,14 +71,16 @@ module.exports = function autoBind({ types: t }) {
                     if (lastExpression && t.isReturnStatement(lastExpression.node)) {
                         lastExpression.insertBefore(statement);
                     } else {
-                        if (ctorBody) {
-                            ctorBody.push(statement);
-                        } else {
+                        // ctorBody 是通过 t.classMethod 创建的方法对象，它没有 get 方法，只能通过 ctor.body.body 获取到 blockStatement 方法体。
+                        // ctorBody = null;
+                        // if (ctorBody) {
+                        //     ctorBody.push(statement);
+                        // } else {
+                            // 这是已经定义了的方法对象，不知道为什么 constructor.get('body.body'); 获取的对象不能直接 push(statement) 而要通过 pushContainer 或者 unshiftContainer 。
                             constructor.get('body').unshiftContainer('body', statement);
-                        }
+                        // }
+
                         // ctorBody.push(statement);
-                        // console.log('append statement', ctorBody.length);
-                        // ctorBody.body ? ctorBody.body.push(statement) : ctorBody.get('body').push(statement);
                     }
                 })
                 
