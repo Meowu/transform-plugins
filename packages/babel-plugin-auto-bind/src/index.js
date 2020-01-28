@@ -39,7 +39,7 @@ module.exports = function autoBind({ types: t }) {
                     path.get('body').unshiftContainer('body', constructor);
                     ctorBody = constructor.body.body;
                 } else {
-                    ctorBody = constructor.get('body.body');
+                    // ctorBody = constructor.get('body.body');
                     // console.log('existed ctor', constructor);
                     // ctorBody = constructor.get('body');
                 }
@@ -63,14 +63,19 @@ module.exports = function autoBind({ types: t }) {
                         t.assignmentExpression('='/**operator */, left, right)
                     )
                     console.log('body', ctorBody)
-                    const lastExpression = ctorBody.pop();
+                    const lastExpression = ctorBody && ctorBody.pop();
                     // TestThis.
                     // lastExpression maybe undefined.
                     if (lastExpression && t.isReturnStatement(lastExpression.node)) {
                         lastExpression.insertBefore(statement);
                     } else {
-                        ctorBody.push(statement);
-                        console.log('append statement', ctorBody.length);
+                        if (ctorBody) {
+                            ctorBody.push(statement);
+                        } else {
+                            constructor.get('body').unshiftContainer('body', statement);
+                        }
+                        // ctorBody.push(statement);
+                        // console.log('append statement', ctorBody.length);
                         // ctorBody.body ? ctorBody.body.push(statement) : ctorBody.get('body').push(statement);
                     }
                 })
