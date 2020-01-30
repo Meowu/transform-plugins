@@ -28,7 +28,8 @@ module.exports = function autoBind({ types: t }) {
                 let constructor = body.find(cls => t.isClassMethod(cls) && cls.node.kind === 'constructor');
                 let ctorBody;
                 if (!constructor) {
-                    // why methods created by user do not have get, pushContainer method?
+                    // Q：why methods created by user do not have get, pushContainer method?
+                    // A：The constructor is a node object here. Those method belong to nodePath.
                     constructor = t.classMethod(
                         'constructor' /* kind */, 
                         t.identifier('constructor')/**key */, 
